@@ -126,6 +126,7 @@ export const optimizeAvailableAppointments = (
 };
 
 /**
+ * Filters available appointment slots based on clinician's capacity constraints.
  *
  * @param availableSlots current slots available
  * @param scheduledAppointments appointments already scheduled
