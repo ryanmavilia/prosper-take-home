@@ -109,6 +109,7 @@ export const optimizeAvailableAppointments = (
       iso: slot,
     };
   });
+
   intervals.sort((a, b) => a.end - b.end);
 
   const selected: AvailableAppointmentSlot[] = [];
