@@ -1,8 +1,5 @@
-import { Patient } from "./models/patient";
-import { patient } from "./models/mock-patient";
 import { clinician } from "./models/mock-clinician";
 import { Appointment, AvailableAppointmentSlot } from "./models/appointment";
-console.log("Hello, World!");
 
 type SlotPair = {
   slot1: { id: string; clinicianId: string; date: Date; length: number };
@@ -20,8 +17,8 @@ const getCalendarDayDiff = (date1: Date, date2: Date) => {
  * @param patient patient seeking appointments
  * @returns available appointment pairs and matched clinician
  */
-export const availableAppointmentPairs = (patient: Patient) => {
-  const sortedSlots = matchedClinician.availableSlots.sort(
+export const availableAppointmentPairs = () => {
+  const sortedSlots = clinician.availableSlots.sort(
     (a, b) => a.date.getTime() - b.date.getTime()
   );
   const pairs: SlotPair[] = [];
@@ -51,7 +48,7 @@ export const availableAppointmentPairs = (patient: Patient) => {
   }
 
   return {
-    clinician: matchedClinician,
+    clinician: clinician,
     pairs: pairs.map((pair) => [
       pair.slot1.date.toISOString(),
       pair.slot2.date.toISOString(),
@@ -92,10 +89,55 @@ export const optimizeAvailableAppointments = (
   return selected;
 };
 
-console.log(availableAppointmentPairs(patient));
+/**
+ *
+ * @param availableSlots current slots available
+ * @param scheduledAppointments appointments already scheduled
+ * @param maxDailyAppointments maximum allowed appointments per day
+ * @param maxWeeklyAppointments maximum allowed appointments per week
+ * @returns filtered available slots based on capacity constraints
+ */
+export const filterSlotsPerCapacity = (
+  availableSlots: AvailableAppointmentSlot[],
+  scheduledAppointments: Appointment[],
+  maxDailyAppointments: number,
+  maxWeeklyAppointments: number
+): AvailableAppointmentSlot[] => {
+  const dailyCount: Record<string, number> = {};
+  const weeklyCount: Record<string, number> = {};
 
-console.log(
-  optimizeAvailableAppointments(clinician.availableSlots).map((slot) =>
-    slot.date.toISOString()
-  )
-);
+  for (const appointment of scheduledAppointments) {
+    if (appointment.status !== "UPCOMING") {
+      continue;
+    }
+
+    const date = appointment.scheduledFor;
+    const dayKey = date.toISOString().split("T")[0];
+
+    const weekStart = new Date(date);
+    weekStart.setUTCDate(date.getUTCDate() - date.getUTCDay());
+    weekStart.setUTCHours(0, 0, 0, 0);
+    const weekKey = weekStart.toISOString().split("T")[0];
+
+    dailyCount[dayKey] = (dailyCount[dayKey] || 0) + 1;
+    weeklyCount[weekKey] = (weeklyCount[weekKey] || 0) + 1;
+  }
+
+  return availableSlots.filter((slot) => {
+    const date = slot.date;
+    const dayKey = date.toISOString().split("T")[0];
+
+    const weekStart = new Date(date);
+    weekStart.setUTCDate(date.getUTCDate() - date.getUTCDay());
+    weekStart.setUTCHours(0, 0, 0, 0);
+    const weekKey = weekStart.toISOString().split("T")[0];
+
+    const currentDailyCount = dailyCount[dayKey] || 0;
+    const currentWeeklyCount = weeklyCount[weekKey] || 0;
+
+    return (
+      currentDailyCount < maxDailyAppointments &&
+      currentWeeklyCount < maxWeeklyAppointments
+    );
+  });
+};
