@@ -149,4 +149,58 @@ describe("Task 3: filterSlotsPerCapacity", () => {
 
     expect(result).toHaveLength(0);
   });
+
+  it("should return available slots when capacity limits are not reached", () => {
+    const availableSlots: AvailableAppointmentSlot[] = [
+      {
+        id: "slot1",
+        clinicianId: "clinician1",
+        date: new Date("2024-08-19T10:00:00.000Z"),
+        length: 90,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: "slot2",
+        clinicianId: "clinician1",
+        date: new Date("2024-08-19T14:00:00.000Z"),
+        length: 90,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: "slot3",
+        clinicianId: "clinician1",
+        date: new Date("2024-08-20T10:00:00.000Z"),
+        length: 90,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ];
+
+    // 1 appointment that overlaps with slot2
+    const scheduledAppointments: Appointment[] = [
+      {
+        id: "appt1",
+        patientId: "patient1",
+        clinicianId: "clinician1",
+        scheduledFor: new Date("2024-08-19T14:30:00.000Z"), // overlaps with slot2
+        appointmentType: "ASSESSMENT_SESSION_1",
+        status: "UPCOMING",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ];
+
+    const result = filterSlotsPerCapacity(
+      availableSlots,
+      scheduledAppointments,
+      2, // maxDailyAppointments
+      8 // maxWeeklyAppointments
+    );
+
+    expect(result).toHaveLength(2);
+    expect(result[0].id).toBe("slot1");
+    expect(result[1].id).toBe("slot3");
+  });
 });
