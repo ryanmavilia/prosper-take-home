@@ -1,9 +1,11 @@
 import {
-  availableAppointmentPairs,
+  findAvailableAppointmentPairs,
   optimizeAvailableAppointments,
   filterSlotsPerCapacity,
 } from "./index";
 import { AvailableAppointmentSlot, Appointment } from "./models/appointment";
+import { clinician } from "./models/mock-clinician";
+import { patient } from "./models/mock-patient";
 
 describe("Task 1: availableAppointmentPairs", () => {
   it("should generate expected pairs from README example", () => {
@@ -21,7 +23,7 @@ describe("Task 1: availableAppointmentPairs", () => {
       ["2024-08-22T15:00:00.000Z", "2024-08-28T12:15:00.000Z"],
     ];
 
-    const result = availableAppointmentPairs();
+    const result = findAvailableAppointmentPairs(patient, clinician);
 
     expectedPairs.forEach((expectedPair) => {
       const found = result.pairs.some(
@@ -51,7 +53,7 @@ describe("Task 2: optimizeAvailableAppointments", () => {
       updatedAt: new Date(),
     }));
 
-    const result = optimizeAvailableAppointments(slots);
+    const result = optimizeAvailableAppointments(slots, clinician);
 
     expect(result).toHaveLength(2);
     expect(result[0].date.toISOString()).toBe("2024-08-19T12:00:00.000Z");
